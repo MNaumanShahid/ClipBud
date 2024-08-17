@@ -6,6 +6,7 @@ import yt_dlp
 from dotenv import load_dotenv
 from openai import OpenAI
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from deepgram import (
     DeepgramClient,
@@ -17,6 +18,21 @@ from deepgram_captions import DeepgramConverter, srt
 app = FastAPI()
 API_KEY = "6db495d0cf32a30d7a675e9de79d0c2e6ba4356e"
 client = OpenAI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://your-frontend-domain.com",
+    # Add more allowed origins as needed
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows specific origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allows all headers
+)
 
 class URLItem(BaseModel):
     url: str
