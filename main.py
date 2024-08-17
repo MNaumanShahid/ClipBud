@@ -16,7 +16,7 @@ from deepgram_captions import DeepgramConverter, srt
 
 app = FastAPI()
 API_KEY = "6db495d0cf32a30d7a675e9de79d0c2e6ba4356e"
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="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")
 
 class URLItem(BaseModel):
     url: str
@@ -151,7 +151,7 @@ async def get_description(item: Item):
             links = item.links
             context = item.context
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": """
                         You are a highly capable and creative language model tasked with generating concise and SEO-optimized descriptions for YouTube videos. The user will provide a video transcript, and your role is to:
@@ -215,7 +215,7 @@ async def get_social_media(item: SMItem):
             with open(item.path, "r") as file:
                 transcript = file.read()
             completion = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": """
                         You are a highly creative language model specializing in crafting engaging social media content. The user will provide a transcript of a video, and your task is to:
@@ -241,6 +241,119 @@ async def get_social_media(item: SMItem):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
+class Reels(BaseModel):
+    path: str
+
+@app.post("/get_reels/")
+async def get_reels(item: Reels):
+    try:
+        if os.path.exists(item.path):
+            with open(item.path, "r") as file:
+                transcript = file.read()
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": """
+                        You are a highly skilled language model specialized in content creation and optimization for social media platforms. The user will provide a transcript of a video, and your task is to:
+
+                        1. Analyze the transcript to identify the most engaging and impactful segments that would be suitable for creating reels or shorts.
+                        2. Focus on moments that are concise, attention-grabbing, and likely to resonate well with a broader audience on platforms like Instagram Reels, YouTube Shorts, or TikTok.
+                        3. Provide the timestamps for these segments in the format `[start time] - [end time]`.
+                        4. Ensure the segments are suitable in length for reels or shorts, typically ranging between 15 to 60 seconds.
+
+                        The final output should only include the timestamps in the following format:
+
+                        ```
+                        [start time] - [end time]
+                        [start time] - [end time]
+                        [start time] - [end time]
+                        ```
+
+                        No additional text or descriptions are needed; just the timestamps.
+                        """},
+                    {"role": "user", "content": f"Transcript: {transcript}"}
+                ]
+            )
+            return {"data": completion.choices[0].message}
+        else:
+            raise HTTPException(status_code=404, detail=f"File '{item.path}' not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+class SummaryItem(BaseModel):
+    path: str
+
+@app.post("/get_summary/")
+async def get_summary(item: SummaryItem):
+    try:
+        if os.path.exists(item.path):
+            with open(item.path, "r") as file:
+                transcript = file.read()
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": """
+                        You are a skilled language model tasked with creating informative and concise summaries of video content. The user will provide a transcript of a video, and your role is to:
+
+                        1. Extract the key points, main ideas, and essential details from the transcript.
+                        2. Craft a clear, engaging, and informative summary that gives the viewer an overall picture of what the video is about.
+                        3. Ensure the summary covers the main topics and any important insights, so that the viewer understands the core message of the video without needing to watch it in full.
+                        4. The tone should be neutral, informative, and accessible, suitable for a broad audience.
+
+                        The final summary should be concise yet comprehensive, providing enough detail to convey the video's content effectively.
+
+                        The output should be structured as follows:
+
+                        - Summary: "Your summary here"
+                        """},
+                    {"role": "user", "content": f"Transcript: {transcript}"}
+                ]
+            )
+            return {"data": completion.choices[0].message}
+        else:
+            raise HTTPException(status_code=404, detail=f"File '{item.path}' not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+class HighlightItem(BaseModel):
+    path: str
+
+@app.post("/get_highlight/")
+async def get_highlight(item: HighlightItem):
+    try:
+        if os.path.exists(item.path):
+            with open(item.path, "r") as file:
+                transcript = file.read()
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": """
+                        You are an expert in summarizing and extracting key highlights from video content. The user will provide a transcript of a video, and your task is to:
+
+                        1. Analyze the transcript to identify the most important and impactful parts of the video that serve as highlights.
+                        2. For each highlight, provide the start time and stop time in the format `[start time] - [stop time]`.
+                        3. After listing the time ranges, provide a brief description of what each highlight covers, explaining its significance or the key point it conveys.
+                        4. Ensure the format is clear and consistent so that the response can be easily parsed.
+
+                        The final output should be structured as follows:
+
+                        ```
+                        Highlights
+                        [start time] - [stop time]: Description of the highlight
+                        [start time] - [stop time]: Description of the highlight
+                        [start time] - [stop time]: Description of the highlight
+                        ```
+
+                        Make sure the highlights cover the main points or the most engaging moments of the video.
+                        """},
+                    {"role": "user", "content": f"Transcript: {transcript}"}
+                ]
+            )
+            return {"data": completion.choices[0].message}
+        else:
+            raise HTTPException(status_code=404, detail=f"File '{item.path}' not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
