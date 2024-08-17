@@ -17,7 +17,7 @@ from deepgram_captions import DeepgramConverter, srt
 
 app = FastAPI()
 API_KEY = "6db495d0cf32a30d7a675e9de79d0c2e6ba4356e"
-client = OpenAI(api_key="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")
+client = OpenAI()
 
 origins = [
     "http://localhost",
