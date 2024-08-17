@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-
+import uuid
 from deepgram import (
     DeepgramClient,
     PrerecordedOptions,
@@ -17,7 +17,7 @@ from deepgram_captions import DeepgramConverter, srt
 
 app = FastAPI()
 API_KEY = "6db495d0cf32a30d7a675e9de79d0c2e6ba4356e"
-client = OpenAI()
+client = OpenAI(api_key="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")
 
 origins = [
     "http://localhost",
@@ -48,6 +48,7 @@ class DelPath(BaseModel):
 async def fetch_url_content(item: URLItem):
     try:
         url = item.url
+        uid = str(uuid.uuid4())
         ydl_opts = {
             'format': 'bestaudio/best',
             'postprocessors': [{
@@ -56,12 +57,12 @@ async def fetch_url_content(item: URLItem):
                 'preferredquality': '192',
             }],
             'ffmpeg_location': r"C:\ffmpeg\bin",
-            'outtmpl': f'/%(title)s.%(ext)s',
+            'outtmpl': f'{uid}.%(ext)s',
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-        audio_path = f"{ydl.extract_info(url, download=False)['title']}.wav"
+        audio_path = f"{uid}.wav"
 
         deepgram = DeepgramClient(API_KEY)
 
