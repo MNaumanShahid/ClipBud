@@ -16,7 +16,7 @@ from deepgram_captions import DeepgramConverter, srt
 
 app = FastAPI()
 API_KEY = "6db495d0cf32a30d7a675e9de79d0c2e6ba4356e"
-client = OpenAI(api_key="key")
+client = OpenAI()
 
 class URLItem(BaseModel):
     url: str
