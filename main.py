@@ -378,6 +378,94 @@ async def get_highlight(item: HighlightItem):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
+class ThumbnailItem(BaseModel):
+    path: str
+
+@app.post("/get_thumbnail/")
+async def get_thumbnail(item: ThumbnailItem):
+    try:
+        if os.path.exists(item.path):
+            with open(item.path, "r") as file:
+                transcript = file.read()
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": """
+                        You are a creative and detail-oriented language model with expertise in generating prompts for AI image generation tools like DALL·E. The user will provide a transcript of a video, and your task is to:
+    
+                        1. Analyze the transcript to identify the main themes, key elements, and most visually striking or important topics that could be used to represent the video in a thumbnail.
+                        2. Craft a detailed and descriptive prompt that can be used directly in DALL·E to generate a visually appealing thumbnail for the video.
+                        3. The prompt should include specific details about the scene, characters, objects, and emotions that need to be depicted, as well as any relevant colors, styles, or themes that would make the thumbnail eye-catching and relevant to the video content.
+                        4. Ensure the prompt is structured in a way that DALL·E can easily interpret, with clear instructions on what should be included in the image.
+    
+                        The final output should be a single, well-crafted prompt that can be used directly in DALL·E to generate the thumbnail.
+    
+                        The output should be structured as follows:
+    
+                        ```
+                        DALL·E Prompt: "A detailed description of the scene for the thumbnail, including key elements, colors, styles, and emotions."
+                        """},
+                    {"role": "user", "content": f"Transcript: {transcript}"}
+                ]
+            )
+            # return {"data": completion.choices[0].message}
+            dalle_prompt = completion.choices[0].message.content
+            dalle_reponse = client.images.generate(
+                model="dall-e-3",
+                prompt=dalle_prompt,
+                n=1,
+                size="1024x1024"
+            )
+            return {"url": dalle_reponse.data[0].url}
+        else:
+            raise HTTPException(status_code=404, detail=f"File '{item.path}' not found.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+class SocialImageItem(BaseModel):
+    path: str
+
+@app.post("/get_social_image/")
+async def get_social_image(item: SocialImageItem):
+    try:
+        if os.path.exists(item.path):
+            with open(item.path, "r") as file:
+                transcript = file.read()
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": """
+                        You are a creative and insightful language model with expertise in generating prompts for AI image generation tools like DALL·E. The user will provide a transcript of a video, and your task is to:
+
+                        1. Analyze the transcript to identify the main themes, key visuals, and most compelling elements that could be depicted in an image suitable for a social media post.
+                        2. Craft a detailed and vivid DALL·E prompt that can be used to create an engaging image for social media. The prompt should capture the essence of the video and translate it into a visually appealing scene.
+                        3. Include specific details about the scene, characters, objects, colors, and emotions that should be depicted in the image, as well as any particular style or aesthetic that would make the image stand out on social media platforms.
+                        4. Ensure the prompt is structured in a way that DALL·E can easily interpret, with clear and precise instructions on what should be included in the image.
+
+                        The final output should be a single, well-crafted prompt that can be used directly in DALL·E to generate the social media post image.
+
+                        The output should be structured as follows:
+
+                        ```
+                        DALL·E Prompt: "A detailed description of the image for the social media post, including key elements, colors, styles, and emotions."
+                        """},
+                    {"role": "user", "content": f"Transcript: {transcript}"}
+                ]
+            )
+            # return {"data": completion.choices[0].message}
+            dalle_prompt = completion.choices[0].message.content
+            dalle_reponse = client.images.generate(
+                model="dall-e-3",
+                prompt=dalle_prompt,
+                n=1,
+                size="1024x1024"
+            )
+            return {"url": dalle_reponse.data[0].url}
+        else:
+            raise HTTPException(status_code=404, detail=f"File '{item.path}' not found.")
+    except Exception as e:
+        return HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
