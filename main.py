@@ -46,12 +46,12 @@ class DelPath(BaseModel):
 async def fetch_url_content(item: URLItem):
     try:
         url = item.url
-        if url == "https://www.youtube.com/watch?v=j8IYsQ6QVp8":
-            return {"audio_path": "audio1.wav", "caption_path": "audio1.srt"}
-        elif url == "https://www.youtube.com/watch?v=06kJXhOZhLU":
-            return {"audio_path": "audio2.wav", "caption_path": "audio2.srt"}
-        elif url == "https://www.youtube.com/watch?v=vJEbP2Vdq2U":
-            return {"audio_path": "audio3.wav", "caption_path": "audio3.srt"}
+        # if url == "https://www.youtube.com/watch?v=j8IYsQ6QVp8":
+        #     return {"audio_path": "audio1.wav", "caption_path": "audio1.srt"}
+        # elif url == "https://www.youtube.com/watch?v=06kJXhOZhLU":
+        #     return {"audio_path": "audio2.wav", "caption_path": "audio2.srt"}
+        # elif url == "https://www.youtube.com/watch?v=vJEbP2Vdq2U":
+        #     return {"audio_path": "audio3.wav", "caption_path": "audio3.srt"}
         uid = str(uuid.uuid4())
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -391,23 +391,54 @@ async def get_thumbnail(item: ThumbnailItem):
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": """
-                        You are a creative and detail-oriented language model with expertise in generating prompts for AI image generation tools like DALL·E. The user will provide a transcript of a video, and your task is to:
-    
-                        1. Analyze the transcript to identify the main themes, key elements, and most visually striking or important topics that could be used to represent the video in a thumbnail.
-                        2. Craft a detailed and descriptive prompt that can be used directly in DALL·E to generate a visually appealing thumbnail for the video.
-                        3. The prompt should include specific details about the scene, characters, objects, and emotions that need to be depicted, as well as any relevant colors, styles, or themes that would make the thumbnail eye-catching and relevant to the video content.
-                        4. Ensure the prompt is structured in a way that DALL·E can easily interpret, with clear instructions on what should be included in the image.
-    
-                        The final output should be a single, well-crafted prompt that can be used directly in DALL·E to generate the thumbnail.
-    
+                        You are a creative language model specialized in content creation. The user will provide a transcript of a video, and your task is to:
+
+                        1. Analyze the transcript to identify the most compelling and attention-grabbing message or phrase that encapsulates the core theme of the video.
+                        2. Craft a concise, impactful tagline that can be added to a thumbnail image. The tagline should be short, powerful, and designed to attract viewers' attention at a glance.
+                        3. Ensure the tagline is relevant to the content and creates curiosity or a strong emotional response, encouraging viewers to click on the video.
+                        4. Limit the tagline to at most 3 or 4 words.
+
+                        The final output should be a single, well-crafted tagline that is ideal for use in a thumbnail image.
+
                         The output should be structured as follows:
-    
+
                         ```
-                        DALL·E Prompt: "A detailed description of the scene for the thumbnail, including key elements, colors, styles, and emotions."
+                        Thumbnail Tagline: "Your impactful text here"
+                        ```
                         """},
                     {"role": "user", "content": f"Transcript: {transcript}"}
                 ]
             )
+
+            # Extract the tagline from the completion response
+            tagline = completion.choices[0].message.content.split(":")[1].strip().strip('"')
+            print(tagline)
+            # Generate the DALL·E prompt
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": """
+                        You are a creative and detail-oriented language model with expertise in generating prompts for AI image generation tools like DALL·E. The user will provide a transcript of a video, and your task is to:
+
+                        1. Analyze the transcript to identify the main themes, key elements, and most visually striking or important topics that could be used to represent the video in a thumbnail.
+                        2. Craft a detailed and descriptive prompt that can be used directly in DALL·E to generate a visually appealing thumbnail for the video.
+                        3. The prompt should include specific details about the scene, characters, objects, and emotions that need to be depicted, as well as any relevant colors, styles, or themes that would make the thumbnail eye-catching and relevant to the video content.
+                        4. Ensure the prompt is structured in a way that DALL·E can easily interpret, with clear instructions on what should be included in the image.
+                        5. Specifically mention the tagline provided by the user, ensuring it is prominently centered in the image, displayed as large, bold text. The tagline should be the primary focus of the thumbnail, standing alone and clearly visible.
+                        6. Ensure the tagline is not only large and bold but also perfectly centered, occupying a significant portion of the image to immediately grab the viewer's attention.
+
+                        The final output should be a single, well-crafted prompt that can be used directly in DALL·E to generate the thumbnail.
+
+                        The output should be structured as follows:
+
+                        ```
+                        DALL·E Prompt: "A detailed description of the scene for the thumbnail, including key elements, colors, styles, and emotions. Place the text '{tagline}' prominently in the center of the image as large, bold text. Make sure the text is the main focus of the thumbnail and occupies a significant portion of the image."
+                        ```
+                        """},
+                    {"role": "user", "content": f"Transcript: {transcript}\nTagline: {tagline}"}
+                ]
+            )
+
             # return {"data": completion.choices[0].message}
             dalle_prompt = completion.choices[0].message.content
             dalle_reponse = client.images.generate(
@@ -465,6 +496,8 @@ async def get_social_image(item: SocialImageItem):
             raise HTTPException(status_code=404, detail=f"File '{item.path}' not found.")
     except Exception as e:
         return HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+
 
 if __name__ == "__main__":
     import uvicorn
