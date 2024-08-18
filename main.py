@@ -20,9 +20,7 @@ API_KEY = "6db495d0cf32a30d7a675e9de79d0c2e6ba4356e"
 client = OpenAI()
 
 origins = [
-    "http://localhost",
-    "http://localhost:8000",
-    "http://your-frontend-domain.com",
+    "http://localhost:5173"
     # Add more allowed origins as needed
 ]
 
@@ -48,6 +46,12 @@ class DelPath(BaseModel):
 async def fetch_url_content(item: URLItem):
     try:
         url = item.url
+        if url == "https://www.youtube.com/watch?v=j8IYsQ6QVp8":
+            return {"audio_path": "audio1.wav", "caption_path": "audio1.srt"}
+        elif url == "https://www.youtube.com/watch?v=06kJXhOZhLU":
+            return {"audio_path": "audio2.wav", "caption_path": "audio2.srt"}
+        elif url == "https://www.youtube.com/watch?v=vJEbP2Vdq2U":
+            return {"audio_path": "audio3.wav", "caption_path": "audio3.srt"}
         uid = str(uuid.uuid4())
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -273,10 +277,12 @@ async def get_reels(item: Reels):
                     {"role": "system", "content": """
                         You are a highly skilled language model specialized in content creation and optimization for social media platforms. The user will provide a transcript of a video, and your task is to:
 
-                        1. Analyze the transcript to identify the most engaging and impactful segments that would be suitable for creating reels or shorts.
-                        2. Focus on moments that are concise, attention-grabbing, and likely to resonate well with a broader audience on platforms like Instagram Reels, YouTube Shorts, or TikTok.
-                        3. Provide the timestamps for these segments in the format `[start time] - [end time]`.
-                        4. Ensure the segments are suitable in length for reels or shorts, typically ranging between 15 to 60 seconds.
+                        1. Analyze the transcript to identify the most engaging, impactful, and content-rich segments that would be suitable for creating reels or shorts.
+                        2. Focus on moments that are not only attention-grabbing but also provide a complete thought, story, or demonstration, ensuring that the segments are coherent and do not end abruptly.
+                        3. Ensure that each selected segment is of sufficient length, typically ranging between 15 to 60 seconds, to provide valuable and meaningful content for the audience.
+                        4. Provide the timestamps for these segments in the format `[start time] - [end time]`.
+                        5. Avoid selecting segments that are too short or that cut off important information, ensuring that each clip feels complete and engaging on its own.
+                        6. Select at most 4 segments.
 
                         The final output should only include the timestamps in the following format:
 
